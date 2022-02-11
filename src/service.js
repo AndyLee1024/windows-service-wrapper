@@ -110,7 +110,12 @@ class Service extends EventEmitter {
         await this.handle('rotate', serviceName);
     }
 
-    async remove(serviceName) {
+    async check(serviceName) {
+        const results = await execa(this.wrapper, ['get', serviceName, 'AppDirectory']);
+        return results
+    }
+
+    async remove(serviceName, retries = 5) {
         const cmd = async () => {
             const results = await execa(this.wrapper, ['remove', serviceName, 'confirm']);
             return results;
@@ -119,7 +124,7 @@ class Service extends EventEmitter {
         await pRetry(cmd, {
             onFailedAttempt: error => {
                 console.log(`Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`);
-            }, retries: 8
+            }, retries: retries
         });
     }
 
@@ -137,7 +142,7 @@ class Service extends EventEmitter {
         await pRetry(cmd, {
             onFailedAttempt: error => {
                 console.log(`Attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`);
-            }, retries: 8
+            }, retries: 5
         });
 
         this.emit(operation);
